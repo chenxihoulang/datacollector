@@ -94,7 +94,9 @@ public class DataCollector {
     }
 
     private static void saveToFile() {
-
+        /**
+         * fdsjalfkjsdakl
+         */
     }
 
     private static class LogThread extends Thread {
