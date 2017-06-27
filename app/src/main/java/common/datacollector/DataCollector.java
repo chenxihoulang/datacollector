@@ -111,7 +111,7 @@ public class DataCollector {
                     public void handleMessage(Message msg) {
                         BufferedWriter out = null;
                         try {
-                            File logFile = createFile(sApplication, "aa111", "hbb.log");
+                            File logFile = createFile(sApplication, "aa111", "hbb",true);
                             out = new BufferedWriter(new OutputStreamWriter(
                                     new FileOutputStream(logFile, true)));
                             out.write(msg.obj.toString());
@@ -153,7 +153,7 @@ public class DataCollector {
     }
 
 
-    public static File createFile(Context context, String filePath, String fileName) {
+    public static File createFile(Context context, String filePath, String fileName, boolean isAppend) {
         String state = Environment.getExternalStorageState();
         File file;
         if (state.equals(Environment.MEDIA_MOUNTED)) {
@@ -162,12 +162,26 @@ public class DataCollector {
             file = context.getCacheDir();
         }
 
-        File newFile = new File(file.getAbsolutePath() + filePath);
-        if (!newFile.exists()) {
-            newFile.mkdirs();
+        File folder = new File(file.getAbsolutePath() + filePath);
+        if (!folder.exists()) {
+            folder.mkdirs();
         }
 
-        File tmpFile = new File(newFile, fileName);
-        return tmpFile;
+        int newFileCount = 0;
+        File newFile;
+        File existingFile = null;
+
+        newFile = new File(folder, String.format("%s_%s.log", fileName, newFileCount));
+        while (newFile.exists()) {
+            existingFile = newFile;
+            newFileCount++;
+            newFile = new File(folder, String.format("%s_%s.log", fileName, newFileCount));
+        }
+
+        if (isAppend) {
+            return existingFile;
+        } else {
+            return newFile;
+        }
     }
 }
