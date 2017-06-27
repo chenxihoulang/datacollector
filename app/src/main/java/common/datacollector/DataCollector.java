@@ -40,7 +40,7 @@ public class DataCollector {
         logData.pageName = activity.getPackageName() + "." + activity.getLocalClassName();
         logData.eventId = "onCreate";
 
-        pushLog(logData);
+        pushLog(logData, true);
     }
 
     public static void onResume(Activity activity) {
@@ -48,7 +48,7 @@ public class DataCollector {
         logData.pageName = activity.getPackageName() + "." + activity.getLocalClassName();
         logData.eventId = "onResume";
 
-        pushLog(logData);
+        pushLog(logData, true);
     }
 
     public static void onPause(Activity activity) {
@@ -56,7 +56,7 @@ public class DataCollector {
         logData.pageName = activity.getPackageName() + "." + activity.getLocalClassName();
         logData.eventId = "onPause";
 
-        pushLog(logData);
+        pushLog(logData, true);
     }
 
     public static void onDestroy(Activity activity) {
@@ -64,7 +64,7 @@ public class DataCollector {
         logData.pageName = activity.getPackageName() + "." + activity.getLocalClassName();
         logData.eventId = "onDestroy";
 
-        pushLog(logData);
+        pushLog(logData, true);
     }
 
     public static void onClick(Activity activity, View view) {
@@ -75,15 +75,25 @@ public class DataCollector {
 
         logData.eventId = "onClick";
 
-        pushLog(logData);
+        pushLog(logData, true);
     }
 
-    public static void pushLog(LogData logData) {
+    public static void onError(Throwable throwable) {
+        LogData logData = new LogData();
+        logData.pageName = throwable.getMessage();
+
+        logData.eventId = "onError";
+
+        pushLog(logData, false);
+    }
+
+    public static void pushLog(LogData logData, boolean isAppend) {
         logData.logTime = System.currentTimeMillis();
         sLogs.push(logData);
 
         Message message = Message.obtain();
         message.obj = logData;
+        message.arg1 = isAppend ? 1 : 2;
         sLogThread.getHandler().sendMessage(message);
     }
 
@@ -111,7 +121,7 @@ public class DataCollector {
                     public void handleMessage(Message msg) {
                         BufferedWriter out = null;
                         try {
-                            File logFile = createFile(sApplication, "aa111", "hbb",true);
+                            File logFile = createFile(sApplication, "aa111", "hbb", msg.arg1 == 1);
                             out = new BufferedWriter(new OutputStreamWriter(
                                     new FileOutputStream(logFile, true)));
                             out.write(msg.obj.toString());
