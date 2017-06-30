@@ -10,11 +10,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.Stack;
 
 /**
@@ -82,9 +79,9 @@ public class DataCollector {
         LogData logData = new LogData();
         logData.pageName = throwable.getMessage();
 
-        logData.eventId = "onError";
+        logData.eventId = "onClick";
 
-        pushLog(logData, false);
+        pushLog(logData, true);
     }
 
     public static void pushLog(LogData logData, boolean isAppend) {
@@ -119,21 +116,22 @@ public class DataCollector {
                 mHandler = new Handler() {
                     @Override
                     public void handleMessage(Message msg) {
-                        BufferedWriter out = null;
-                        try {
-                            File logFile = createFile(sApplication, "aa111", "hbb", msg.arg1 == 1);
-                            out = new BufferedWriter(new OutputStreamWriter(
-                                    new FileOutputStream(logFile, true)));
-                            out.write(msg.obj.toString());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        } finally {
-                            try {
-                                out.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+//                        BufferedWriter out = null;
+//                        try {
+//                            File logFile = createFile(sApplication, "aa111", "hbb", msg.arg1 == 1);
+//
+//                            out = new BufferedWriter(new OutputStreamWriter(
+//                                    new FileOutputStream(logFile, true)));
+//                            out.write(msg.obj.toString());
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        } finally {
+//                            try {
+//                                out.close();
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
                     }
                 };
                 mSync.notifyAll();
@@ -189,8 +187,18 @@ public class DataCollector {
         }
 
         if (isAppend) {
+            try {
+                existingFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return existingFile;
         } else {
+            try {
+                newFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return newFile;
         }
     }
