@@ -62,13 +62,13 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
         //找出两个页面中的view
         iteratorView(decorView);
 
-        if(decorView instanceof ViewGroup) {
-            ViewGroup decorViewGroup = (ViewGroup)decorView;
-            View fistView = decorViewGroup.getChildAt(0);
-            if(!(fistView instanceof CoverFrameLayout)) {
-                creatCoverFrameLayout(decorViewGroup);
-            }
-        }
+//        if(decorView instanceof ViewGroup) {
+//            ViewGroup decorViewGroup = (ViewGroup)decorView;
+//            View fistView = decorViewGroup.getChildAt(0);
+//            if(!(fistView instanceof CoverFrameLayout)) {
+//                creatCoverFrameLayout(decorViewGroup);
+//            }
+//        }
     }
 
     private CoverFrameLayout creatCoverFrameLayout(ViewGroup decorView) {
