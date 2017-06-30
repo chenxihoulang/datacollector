@@ -18,7 +18,9 @@ import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ChaiHongwei on 2017/6/30 10:22.
@@ -29,10 +31,11 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
     private final String TAG = this.getClass().getSimpleName();
 
     private final List<View> mViews = new ArrayList<>();
+    private final Map<View, String> mViewPaths = new HashMap<>();
     private WeakReference activityRefer = null;
 
-    public static WeLifecycleCallBacks getInstance(){
-        if(mWeLifecycleCallBacks==null) {
+    public static WeLifecycleCallBacks getInstance() {
+        if (mWeLifecycleCallBacks == null) {
             mWeLifecycleCallBacks = new WeLifecycleCallBacks();
         }
         return mWeLifecycleCallBacks;
@@ -44,46 +47,58 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
 
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle) {
-        Log.e(TAG,"onActivityCreated ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityCreated ->" + activity.getClass().getSimpleName());
 
     }
 
     @Override
     public void onActivityStarted(Activity activity) {
-        Log.e(TAG,"onActivityStarted ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityStarted ->" + activity.getClass().getSimpleName());
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
-        Log.e(TAG,"onActivityResumed ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityResumed ->" + activity.getClass().getSimpleName());
         this.activityRefer = new WeakReference(activity);
         View decorView = activity.getWindow().getDecorView();
         mViews.clear();
+        mViewPaths.clear();
         //找出两个页面中的view
         iteratorView(decorView);
 
-//        if(decorView instanceof ViewGroup) {
-//            ViewGroup decorViewGroup = (ViewGroup)decorView;
-//            View fistView = decorViewGroup.getChildAt(0);
-//            if(!(fistView instanceof CoverFrameLayout)) {
-//                creatCoverFrameLayout(decorViewGroup);
-//            }
-//        }
+        //        if(decorView instanceof ViewGroup) {
+        //            ViewGroup decorViewGroup = (ViewGroup)decorView;
+        //            View fistView = decorViewGroup.getChildAt(0);
+        //            if(!(fistView instanceof CoverFrameLayout)) {
+        //                creatCoverFrameLayout(decorViewGroup);
+        //            }
+        //        }
     }
 
     private CoverFrameLayout creatCoverFrameLayout(ViewGroup decorView) {
-        if(activityRefer.get()==null) return null;
+        if (activityRefer.get() == null) return null;
         //TODO 在这里可能需要不根据不同的情况返回不同的这个Layout.比如frgment ? popWIndows 等等
-        return new CoverFrameLayout((Activity)activityRefer.get(), decorView);
+        return new CoverFrameLayout((Activity) activityRefer.get(), decorView);
     }
 
     private void iteratorView(View view) {
-        Log.e(TAG,"iteratorView "+view.getClass().getSimpleName());
-        if(view instanceof ViewGroup) {
-            ViewGroup vg = (ViewGroup)view;
+        Log.e(TAG, "iteratorView " + view.getClass().getSimpleName());
+
+        String parentViewPath = mViewPaths.get(view);
+        if (parentViewPath == null) {
+            parentViewPath = "MainWindow";
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
             int childCount = vg.getChildCount();
-            for(int i=0;i<childCount;i++) {
-                iteratorView(vg.getChildAt(i));
+            for (int i = 0; i < childCount; i++) {
+                View childView = vg.getChildAt(i);
+
+                String childViewPath = parentViewPath + "/" + childView.getClass().getSimpleName()
+                        + "[" + i + "]";
+                mViewPaths.put(childView, childViewPath);
+
+                iteratorView(childView);
             }
         } else {
             //TODO 在这里如果需要项目化功能,还需要结合自身项目的功能和统计规则对一些特殊的控件的保存方式。
@@ -95,31 +110,31 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
 
     @Override
     public void onActivityPaused(Activity activity) {
-        Log.e(TAG,"onActivityPaused ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityPaused ->" + activity.getClass().getSimpleName());
     }
 
     @Override
     public void onActivityStopped(Activity activity) {
-        Log.e(TAG,"onActivityStopped ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityStopped ->" + activity.getClass().getSimpleName());
     }
 
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
-        Log.e(TAG,"onActivitySaveInstanceState ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivitySaveInstanceState ->" + activity.getClass().getSimpleName());
     }
 
     @Override
     public void onActivityDestroyed(Activity activity) {
-        Log.e(TAG,"onActivityDestroyed ->"+activity.getClass().getSimpleName());
+        Log.e(TAG, "onActivityDestroyed ->" + activity.getClass().getSimpleName());
     }
 
-    public View touchAnyView(MotionEvent motionEvent){
-        if(activityRefer.get()==null) return null;
+    public View touchAnyView(MotionEvent motionEvent) {
+        if (activityRefer.get() == null) return null;
         View touchView = findTouchView(motionEvent);
-        if(touchView==null) {
-            Toast.makeText((Activity)activityRefer.get(),"点击到空白区域",Toast.LENGTH_SHORT).show();
+        if (touchView == null) {
+            Toast.makeText((Activity) activityRefer.get(), "点击到空白区域", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText((Activity)activityRefer.get(),findTouchViewTag(touchView),Toast.LENGTH_SHORT).show();
+            Toast.makeText((Activity) activityRefer.get(), findTouchViewTag(touchView), Toast.LENGTH_SHORT).show();
         }
 
         return touchView;
@@ -127,13 +142,13 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
 
     private View findTouchView(MotionEvent motionEvent) {
         int[] location = new int[2];
-        for (View v:mViews) {
-            if(v.isShown()) {
+        for (View v : mViews) {
+            if (v.isShown()) {
                 v.getLocationOnScreen(location);
                 Rect r = new Rect();
                 v.getGlobalVisibleRect(r);
-                boolean contains = r.contains((int)motionEvent.getX(),(int)motionEvent.getY());
-                if(contains) {
+                boolean contains = r.contains((int) motionEvent.getX(), (int) motionEvent.getY());
+                if (contains) {
                     //TODO 在这里如果需要项目化功能,还需要对此view是否可见?是否可点进行一些判断,再确定用户点击的是哪个View
                     return v;
                 }
@@ -143,28 +158,28 @@ public class WeLifecycleCallBacks implements Application.ActivityLifecycleCallba
     }
 
     private String findTouchViewTag(View v) {
-        if(v==null) return "View is null";
-        if(v instanceof TextView) {
-            if(v instanceof CheckBox) {
+        if (v == null) return "View is null";
+        if (v instanceof TextView) {
+            if (v instanceof CheckBox) {
                 CheckBox cb = (CheckBox) v;
-                return "CheckBox, text is:"+cb.getText();
-            } else if(v instanceof Button){
+                return "CheckBox, text is:" + cb.getText();
+            } else if (v instanceof Button) {
                 Button btn = (Button) v;
                 return "Button, text is:" + btn.getText();
-            } else if(v instanceof EditText) {
+            } else if (v instanceof EditText) {
                 EditText et = (EditText) v;
-                return "EditText, text is:"+et.getText();
-            }else {
+                return "EditText, text is:" + et.getText();
+            } else {
                 TextView tv = (TextView) v;
                 return "TextView, text is:" + tv.getText().toString();
             }
-        } else if(v instanceof ImageView) {
+        } else if (v instanceof ImageView) {
             ImageView im = (ImageView) v;
-            return "ImageView, contentDrscription is:"+im.getContentDescription();
-        }else if(v instanceof Spinner) {
+            return "ImageView, contentDrscription is:" + im.getContentDescription();
+        } else if (v instanceof Spinner) {
             Spinner spinner = (Spinner) v;
-            return "Spinner, item is:"+spinner.getCount();
+            return "Spinner, item is:" + spinner.getCount();
         }
-        return  "No Identity";
+        return "No Identity";
     }
 }
